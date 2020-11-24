@@ -1,0 +1,4 @@
+# cat requirements.txt
+pytube==10.0.0
+numpy~=1.19.2
+moviepy~=1.0.3
