@@ -9,19 +9,21 @@ class Editor:
         self.audio = self.data.audio
         self.title = title
 
-    def calc_volume(self, gate=0.009):
+    def calc_volume(self, gate=0.000048, separation=2):  # cube: gate=0.000047, separation = 1,2,4
         def add(ind, i: VideoClip):
             if volumes[ind] < gate:
                 return i.fx(vfx.speedx, 5)
             else:
-                return i
+                return i.fx(vfx.speedx, 1.5)
+
+        def volume(arr):
+            return np.power(arr, 2).mean()
 
         n = int(self.data.duration)
         print("cutting")
-        clips = [self.data.subclip(i, i + 1) for i in range(n - 1)]
-        volume = lambda arr: np.sqrt(((1.0 * arr) ** 2).mean())
+        clips = [self.data.subclip(i/separation, i/separation + 1/separation) for i in range(n*separation - 1)]
         print("calc volumes")
-        volumes = [volume(clips[i].audio.to_soundarray(fps=22000)) for i in range(n - 1)]
+        volumes = [volume(clips[i].audio.to_soundarray(fps=22000)) for i in range(n*separation - 1)]
         print(volumes)
         print("accelerating")
         clips = [add(ind, i) for ind, i in enumerate(clips)]
