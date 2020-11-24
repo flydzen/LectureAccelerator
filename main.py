@@ -5,7 +5,7 @@ from moviepy.editor import *
 
 class Editor:
     def __init__(self, title, path):
-        self.data = VideoFileClip(path).subclip(100, 800)
+        self.data = VideoFileClip(path)
         self.audio = self.data.audio
         self.title = title
 
@@ -49,6 +49,4 @@ def download(url):
 
 
 if __name__ == '__main__':
-    # url_ = "https://www.youtube.com/watch?v=BL58YWapQFM"
     download(input("url to video: "))
-    # download(url_)
