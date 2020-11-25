@@ -11,6 +11,7 @@ class Editor:
 
     def calc_volume(self, gate=0.000048, separation=2):  # cube: gate=0.000047, separation = 1,2,4
         last = 0
+        clips = []
 
         def cut(data, i):
             return data.subclip(i/separation, i/separation + 1/separation)
@@ -19,14 +20,16 @@ class Editor:
             return np.power(cut(self.audio, i).to_soundarray(fps=22000), 2).mean()
 
         def add(i):
+            nonlocal last, clips
             if volume(i) < gate:
-                return cut(self.data, i).fx(vfx.speedx, 5)
-            else:
-                return cut(self.data, i).fx(vfx.speedx, 1.5)
+                clips.append(self.data.subclip(last, i/separation))
+                clips.append(self.data.subclip(i/separation, i/separation + 1/separation).fx(vfx.speedx, 5))
+                last = i/separation + 1/separation
 
         print("accelerating")
         n = int(self.data.duration)
-        clips = [add(i) for i in range(n*separation - 1)]
+        for j in range(n*separation - 1):
+            add(j)
         final = concatenate_videoclips(clips)
         print("rendering")
         final.write_videofile('{}.mp4'.format(self.title))
@@ -52,3 +55,4 @@ def download(url):
 
 if __name__ == '__main__':
     download(input("url to video: "))
+    # https://www.youtube.com/watch?v=HVnL7bAZgrE
