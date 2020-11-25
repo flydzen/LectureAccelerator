@@ -5,30 +5,30 @@ from moviepy.editor import *
 
 class Editor:
     def __init__(self, title, path):
-        self.data = VideoFileClip(path)
+        self.data = VideoFileClip(path).subclip(100, 200)
         self.audio = self.data.audio
         self.title = title
 
     def calc_volume(self, gate=0.000048, separation=2):  # cube: gate=0.000047, separation = 1,2,4
-        def add(ind, i: VideoClip):
-            if volumes[ind] < gate:
-                return i.fx(vfx.speedx, 5)
+        last = 0
+
+        def cut(data, i):
+            return data.subclip(i/separation, i/separation + 1/separation)
+
+        def volume(i):
+            return np.power(cut(self.audio, i).to_soundarray(fps=22000), 2).mean()
+
+        def add(i):
+            if volume(i) < gate:
+                return cut(self.data, i).fx(vfx.speedx, 5)
             else:
-                return i.fx(vfx.speedx, 1.5)
+                return cut(self.data, i).fx(vfx.speedx, 1.5)
 
-        def volume(arr):
-            return np.power(arr, 2).mean()
-
-        n = int(self.data.duration)
-        print("cutting")
-        clips = [self.data.subclip(i/separation, i/separation + 1/separation) for i in range(n*separation - 1)]
-        print("calc volumes")
-        volumes = [volume(clips[i].audio.to_soundarray(fps=22000)) for i in range(n*separation - 1)]
-        print(volumes)
         print("accelerating")
-        clips = [add(ind, i) for ind, i in enumerate(clips)]
-        print("rendering")
+        n = int(self.data.duration)
+        clips = [add(i) for i in range(n*separation - 1)]
         final = concatenate_videoclips(clips)
+        print("rendering")
         final.write_videofile('{}.mp4'.format(self.title))
         final.close()
         print("finished")
