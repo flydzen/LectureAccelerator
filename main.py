@@ -43,19 +43,19 @@ class Editor:
         print("finished")
 
 
-def process(url):
+def process(url, title):
     global starttime
     starttime = time.time()
     youtube = pytube.YouTube(url)
     print("downloading {}".format(youtube.title))
-    video = youtube.streams.all()
-    path = video[0].download('./temp')
-    editor = Editor(youtube.title, path)
+    video = youtube.streams.get_highest_resolution()  # get_lowest_resolution()
+    path = video.download('./temp', title)
+    editor = Editor(title, path)
     editor.process()
 
 
 if __name__ == '__main__':
     starttime = 0
-    process(input("url to video: "))
+    process(input("url to video: "), input("file name: "))
     print("time {}".format(time.time()-starttime))
     # https://www.youtube.com/watch?v=HVnL7bAZgrE
