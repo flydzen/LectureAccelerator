@@ -5,10 +5,11 @@ import time
 
 class Editor:
     def __init__(self, title, path):
-        self.data = AudioFileClip(path).subclip(0, 120)
+        self.data = VideoFileClip(path).subclip(0, 120)
+        self.audio = self.data.audio
         self.title = title
 
-    def calc_volume(self, gate=0.000048, separation=2):  # cube: gate=0.000047, separation = 1,2,4
+    def process(self, gate=0.000048, separation=2):  # cube: gate=0.000047, separation = 1,2,4
         last = 0
         clips = []
         percent = -1
@@ -41,37 +42,20 @@ class Editor:
         final.close()
         print("finished")
 
-    def test(self, gate=0.000048, separation=2):
-        def cut(data, i):
-            return data.subclip(i/separation, i/separation + 1/separation)
 
-        def volume(i):
-            return np.power(cut(self.data, i).to_soundarray(fps=4000), 2).mean()
-
-        data = [volume(i) for i in range(int(self.data.duration)*separation-1)]
-        return data
-
-
-def gen_ev_listener(title):
-    def event_listener(stream, path):
-        editor = Editor(title, path)
-        print(editor.test())
-
-    return event_listener
-
-
-def download(url):
+def process(url):
     global starttime
     starttime = time.time()
     youtube = pytube.YouTube(url)
     print("downloading {}".format(youtube.title))
-    youtube.register_on_complete_callback(gen_ev_listener(youtube.title))
-    video = youtube.streams.filter(only_audio=True).all()
-    video[0].download('./temp')
+    video = youtube.streams.all()
+    path = video[0].download('./temp')
+    editor = Editor(youtube.title, path)
+    editor.process()
 
 
 if __name__ == '__main__':
     starttime = 0
-    download(input("url to video: "))
+    process(input("url to video: "))
     print("time {}".format(time.time()-starttime))
     # https://www.youtube.com/watch?v=HVnL7bAZgrE
